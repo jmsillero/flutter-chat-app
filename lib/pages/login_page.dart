@@ -1,5 +1,8 @@
+import 'package:chat_app/helpers/show_alert.dart';
+import 'package:chat_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/components/components.dart';
+import 'package:provider/provider.dart';
 
 class LoginPage extends StatefulWidget {
   @override
@@ -56,6 +59,8 @@ class _FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+
     return Container(
       margin: const EdgeInsets.only(
         top: 40,
@@ -74,11 +79,26 @@ class _FormState extends State<_Form> {
           textController: passwordTextController,
         ),
         Button(
-          onPress: () {},
+          onPress: authService.loading
+              ? null
+              : () async {
+                  FocusScope.of(context).unfocus();
+                  final authenticated = await authService.login(
+                      emailTextController.text, passwordTextController.text);
+                  _showAlert(authenticated);
+                },
           text: 'Login',
         )
       ]),
     );
+  }
+
+  _showAlert(bool isAuthenticated) {
+    if (isAuthenticated) {
+      Navigator.of(context).pushReplacementNamed('users');
+      return;
+    }
+    showAlert(context, 'Login failed', 'Check your credentials');
   }
 }
 

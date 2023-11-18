@@ -1,5 +1,7 @@
 import 'package:chat_app/models/users.dart';
+import 'package:chat_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
 
 class UsersPage extends StatefulWidget {
@@ -11,37 +13,23 @@ class UsersPage extends StatefulWidget {
 
 class _UsersPageState extends State<UsersPage> {
   final _refreshController = RefreshController(initialRefresh: false);
-  final users = [
-    User(online: true, email: 'user@email.com', name: 'User Name 1', uuid: '1'),
-    User(
-        online: true, email: 'user1@email.com', name: 'User Name 2', uuid: '2'),
-    User(
-        online: false,
-        email: 'user2@email.com',
-        name: 'User Name 3',
-        uuid: '3'),
-    User(
-        online: true, email: 'user3@email.com', name: 'User Name 4', uuid: '4'),
-    User(
-        online: false,
-        email: 'user4@email.com',
-        name: 'User Name 5',
-        uuid: '5'),
-    User(
-        online: true, email: 'user5@email.com', name: 'User Name 6', uuid: '6'),
-    User(
-        online: true, email: 'user6@email.com', name: 'User Name 7', uuid: '7'),
-  ];
+  final users = <User>[];
 
   @override
   Widget build(BuildContext context) {
+    final authService = Provider.of<AuthService>(context);
+    final user = authService.user;
+
     return Scaffold(
         appBar: AppBar(
-          title: const Text('Mi Name'),
+          title: Text(user?.name ?? ''),
           elevation: 1,
           leading: IconButton(
             icon: const Icon(Icons.exit_to_app),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.of(context).pushReplacementNamed('login');
+              AuthService.deleteToken();
+            },
           ),
           actions: [
             Container(

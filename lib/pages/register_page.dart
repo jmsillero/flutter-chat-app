@@ -1,5 +1,8 @@
+import 'package:chat_app/helpers/show_alert.dart';
+import 'package:chat_app/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/components/components.dart';
+import 'package:provider/provider.dart';
 
 class RegisterPage extends StatefulWidget {
   @override
@@ -10,7 +13,6 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-
     return Scaffold(
       backgroundColor: const Color(0xffF2F2F2),
       body: SafeArea(
@@ -57,6 +59,8 @@ class _FormState extends State<_Form> {
 
   @override
   Widget build(BuildContext context) {
+    final authProvider = Provider.of<AuthService>(context);
+
     return Container(
       margin: const EdgeInsets.only(
         top: 40,
@@ -81,7 +85,20 @@ class _FormState extends State<_Form> {
           textController: passwordTextController,
         ),
         Button(
-          onPress: () {},
+          onPress: () {
+            FocusScope.of(context).unfocus();
+            authProvider
+                .register(nameTextController.text, emailTextController.text,
+                    passwordTextController.text)
+                .then((registered) {
+              if (registered) {
+                Navigator.of(context).pushReplacementNamed('users');
+              } else {
+                showAlert(context, 'Register error',
+                    'An error occurred during your registration, please check your email');
+              }
+            });
+          },
           text: 'Register',
         )
       ]),
