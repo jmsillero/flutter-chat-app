@@ -1,5 +1,6 @@
 import 'package:chat_app/helpers/show_alert.dart';
 import 'package:chat_app/services/auth_service.dart';
+import 'package:chat_app/services/socket_service.dart';
 import 'package:flutter/material.dart';
 import 'package:chat_app/components/components.dart';
 import 'package:provider/provider.dart';
@@ -60,6 +61,7 @@ class _FormState extends State<_Form> {
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(context);
 
     return Container(
       margin: const EdgeInsets.only(
@@ -95,7 +97,10 @@ class _FormState extends State<_Form> {
 
   _showAlert(bool isAuthenticated) {
     if (isAuthenticated) {
+      final socketService = Provider.of<SocketService>(context, listen: false);
       Navigator.of(context).pushReplacementNamed('users');
+      socketService.connect();
+
       return;
     }
     showAlert(context, 'Login failed', 'Check your credentials');

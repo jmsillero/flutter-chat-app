@@ -1,5 +1,8 @@
 import 'package:chat_app/models/users.dart';
 import 'package:chat_app/services/auth_service.dart';
+import 'package:chat_app/services/chat_service.dart';
+import 'package:chat_app/services/socket_service.dart';
+import 'package:chat_app/services/user_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:pull_to_refresh/pull_to_refresh.dart';
@@ -13,11 +16,22 @@ class UsersPage extends StatefulWidget {
 
 class _UsersPageState extends State<UsersPage> {
   final _refreshController = RefreshController(initialRefresh: false);
-  final users = <User>[];
+  final userService = UserService();
+  List<User> users = <User>[];
+
+  @override
+  void initState() {
+    super.initState();
+
+    _loadRefresh();
+  }
 
   @override
   Widget build(BuildContext context) {
     final authService = Provider.of<AuthService>(context);
+    final socketService = Provider.of<SocketService>(
+      context,
+    );
     final user = authService.user;
 
     return Scaffold(
@@ -28,16 +42,19 @@ class _UsersPageState extends State<UsersPage> {
             icon: const Icon(Icons.exit_to_app),
             onPressed: () {
               Navigator.of(context).pushReplacementNamed('login');
+              socketService.disconnect();
               AuthService.deleteToken();
             },
           ),
           actions: [
             Container(
               margin: const EdgeInsets.only(right: 10),
-              child: const Icon(
-                Icons.offline_bolt,
-                color: Colors.blueAccent,
-              ),
+              child: socketService.serverStatus == ServerStatus.offline
+                  ? const Icon(
+                      Icons.offline_bolt,
+                      color: Colors.red,
+                    )
+                  : const Icon(Icons.check_circle, color: Colors.blueAccent),
             )
           ],
         ),
@@ -55,9 +72,12 @@ class _UsersPageState extends State<UsersPage> {
   }
 
   _loadRefresh() async {
-    await Future.delayed(const Duration(milliseconds: 1000));
+    final _users = await userService.fetchUsers();
+    users = [..._users];
+
     _refreshController.refreshCompleted();
-    print('Hello');
+
+    setState(() {});
   }
 }
 
@@ -99,6 +119,11 @@ class _ItemUser extends StatelessWidget {
             color: user.online ? Colors.green[300] : Colors.red,
             borderRadius: BorderRadius.circular(100)),
       ),
+      onTap: () {
+        final chatService = Provider.of<ChatService>(context, listen: false);
+        chatService.target = user;
+        Navigator.of(context).pushNamed('chat');
+      },
     );
   }
 }
